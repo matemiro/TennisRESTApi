@@ -35,13 +35,12 @@ class LeagueCreateListView(generics.GenericAPIView):
 
 class LeagueDetailView(generics.GenericAPIView):
 
-    serializer_class = LeagueDetailSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     @swagger_auto_schema(operation_summary="Update league info")
     def patch(self, request, league_id):
         league = get_object_or_404(League, pk=league_id)
-        serializer = self.serializer_class(instance=league, data=request.data, partial=True)
+        serializer = LeagueCreationSerializer(instance=league, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
@@ -52,7 +51,7 @@ class LeagueDetailView(generics.GenericAPIView):
     @swagger_auto_schema(operation_summary="Get league details")
     def get(self, request, league_id):
         league = get_object_or_404(League, pk=league_id)
-        serializer = self.serializer_class(instance=league)
+        serializer = LeagueDetailSerializer(instance=league)
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 

@@ -48,8 +48,28 @@ class LeagueDetailSerializer(LeagueCreationSerializer):
         return league.get_table()
 
     def get_played_matches(self, league):
-        return [str(match) for match in league.matches.filter(score__isnull=False)]
+        played_matches = league.matches.filter(score__isnull=False)
+        return {played_match.id: {
+            'player1': {
+                'id': played_match.first_player.id,
+                'name': played_match.first_player.surname
+            },
+            'player2': {
+                'id': played_match.second_player.id,
+                'name': played_match.second_player.surname
+            },
+            'score': played_match.score.get_score()
+        } for played_match in played_matches}
 
     def get_matches_not_played(self, league):
-        return [(match.id, str(match)) for match in league.matches.filter(score__isnull=True)]
-
+        not_played_matches = league.matches.filter(score__isnull=True)
+        return {played_match.id: {
+            'player1': {
+                'id': played_match.first_player.id,
+                'name': played_match.first_player.surname
+            },
+            'player2': {
+                'id': played_match.second_player.id,
+                'name': played_match.second_player.surname
+            }
+        } for played_match in not_played_matches}

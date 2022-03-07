@@ -27,19 +27,19 @@ class League(models.Model):
 
     def get_table(self):
         if not self.status == LEAGUE_STATUS[0][0]:
-            table = {player.surname: {'games': 0, 'wins': 0, 'won_sets': 0, 'lost_sets': 0} for player in self.players.all()}
+            table = {player.id: {'player_name': f"{player.name[0]}. {player.surname}", 'games': 0, 'wins': 0, 'won_sets': 0, 'lost_sets': 0} for player in self.players.all()}
             league_games = self.matches.filter(score__isnull=False) if hasattr(self, 'matches') else []
             for match in league_games:
                 winner, loser, winner_sets, loser_sets = get_match_winner_loser_and_sets_result(match)
-                table[winner.surname]['games'] += 1
-                table[loser.surname]['games'] += 1
+                table[winner.id]['games'] += 1
+                table[loser.id]['games'] += 1
 
-                table[winner.surname]['wins'] += 1
+                table[winner.id]['wins'] += 1
 
-                table[winner.surname]['won_sets'] += winner_sets
-                table[winner.surname]['lost_sets'] += loser_sets
-                table[loser.surname]['won_sets'] += loser_sets
-                table[loser.surname]['lost_sets'] += winner_sets
+                table[winner.id]['won_sets'] += winner_sets
+                table[winner.id]['lost_sets'] += loser_sets
+                table[loser.id]['won_sets'] += loser_sets
+                table[loser.id]['lost_sets'] += winner_sets
 
             return dict(sorted(table.items(), key=lambda item: (item[1]['wins'], item[1]['won_sets']), reverse=True))
 
