@@ -22,6 +22,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
+    path('profiles/', include('players_profile.urls')),
     path('games/', include('games.urls')),
     path('leagues/', include('leagues.urls')),
     path('auth/', include('djoser.urls.jwt')),
