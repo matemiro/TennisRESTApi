@@ -85,6 +85,6 @@ class GameScoreValidation(generics.GenericAPIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
+            return Response(status=status.HTTP_200_OK)
 
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
