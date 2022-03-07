@@ -43,7 +43,7 @@ class ProvideScore(generics.GenericAPIView):
             user = get_object_or_404(Profile, user=request.user)
             game = get_object_or_404(Game, pk=game_id)
 
-            if user not in (game.first_player, game.second_player) or not request.user.is_superuser:
+            if user not in (game.first_player, game.second_player) and not request.user.is_superuser:
                 return Response(data={"message": "Only players and administrator can provide result"},
                                 status=status.HTTP_400_BAD_REQUEST)
 
