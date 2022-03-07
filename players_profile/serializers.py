@@ -14,7 +14,7 @@ class ProfileDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
-        read_only_fields = ('user', )
+        read_only_fields = ('user', 'games_played', 'games_won', 'games_lost',)
 
     def get_games_played(self, profile):
         return Game.objects.filter(

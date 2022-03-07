@@ -39,7 +39,7 @@ class LeagueDetailView(generics.GenericAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     @swagger_auto_schema(operation_summary="Update league info")
-    def put(self, request, league_id):
+    def patch(self, request, league_id):
         league = get_object_or_404(League, pk=league_id)
         serializer = self.serializer_class(instance=league, data=request.data, partial=True)
 
