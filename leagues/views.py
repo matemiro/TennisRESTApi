@@ -6,6 +6,8 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 
+from tennis_api.exceptions import IncompleteProfile, LeagueAlreadyJoined, LeagueNotOpened, LeagueDoesntJoined, \
+    NotEnoughPlayersToStartLeague, WrongLeagueStatusToStart, ChangeLeagueStatus, CreateScheduleError
 from .models import League, LEAGUE_STATUS
 from .serializers import LeagueCreationSerializer, LeagueDetailSerializer
 from players_profile.models import Profile
@@ -66,16 +68,16 @@ class JoinLeague(generics.GenericAPIView):
         league = get_object_or_404(League, pk=league_id)
 
         if not user.is_complete():
-            return Response(data={"message": "Incompleted Profile"}, status=status.HTTP_400_BAD_REQUEST)
+            raise IncompleteProfile
 
-        if league.status == 'OPEN':
-            if user in league.players.all():
-                return Response(data={"message": "League already joined"}, status=status.HTTP_400_BAD_REQUEST)
+        if not league.status == 'OPEN':
+            raise LeagueNotOpened
 
-            league.players.add(user)
-            return Response(status=status.HTTP_200_OK)
-        else:
-            return Response(data={"message": "League is not OPENED"}, status=status.HTTP_400_BAD_REQUEST)
+        if user in league.players.all():
+            raise LeagueAlreadyJoined
+
+        league.players.add(user)
+        return Response(status=status.HTTP_200_OK)
 
 
 class LeaveLeague(generics.GenericAPIView):
@@ -87,14 +89,14 @@ class LeaveLeague(generics.GenericAPIView):
         user = get_object_or_404(Profile, user=request.user)
         league = get_object_or_404(League, pk=league_id)
 
-        if league.status == 'OPEN':
-            if user not in league.players.all():
-                return Response(data={"message": "League does not joined"}, status=status.HTTP_400_BAD_REQUEST)
+        if not league.status == 'OPEN':
+            raise LeagueNotOpened
 
-            league.players.remove(user)
-            return Response(status=status.HTTP_200_OK)
-        else:
-            return Response(data={"message": "League is not OPENED"}, status=status.HTTP_400_BAD_REQUEST)
+        if user not in league.players.all():
+            raise LeagueDoesntJoined
+
+        league.players.remove(user)
+        return Response(status=status.HTTP_200_OK)
 
 
 class StartLeague(generics.GenericAPIView):
@@ -106,21 +108,25 @@ class StartLeague(generics.GenericAPIView):
         league = get_object_or_404(League, pk=league_id)
 
         if not league.players.count() >= league.min_number_of_players:
-            return Response(data={"message": "Not enough players to start the league"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            raise NotEnoughPlayersToStartLeague
 
-        if league.status == LEAGUE_STATUS[0][0]:
+        if not league.status == 'OPEN':
+            raise WrongLeagueStatusToStart
+
+        try:
             league.status = LEAGUE_STATUS[1][0]
             league.save()
+        except (IndexError, AttributeError):
+            raise ChangeLeagueStatus
 
+        try:
             unique_players_pairs = combinations(league.players.all(), 2)
             for first_player, second_player in unique_players_pairs:
                 Game(first_player=first_player, second_player=second_player, exhibition=league).save()
+        except TypeError:
+            raise CreateScheduleError
 
-            return Response(status=status.HTTP_200_OK)
-
-        return Response(data={"message": f"League can be started only if its status is {LEAGUE_STATUS[0][0]}"},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_200_OK)
 
 
 class EndLeague(generics.GenericAPIView):
@@ -130,6 +136,11 @@ class EndLeague(generics.GenericAPIView):
     @swagger_auto_schema(operation_summary="End the league")
     def post(self, request, league_id):
         league = get_object_or_404(League, pk=league_id)
-        league.status = LEAGUE_STATUS[2][0]
-        league.save()
+
+        try:
+            league.status = LEAGUE_STATUS[2][0]
+            league.save()
+        except (IndexError, AttributeError):
+            raise ChangeLeagueStatus
+
         return Response(status=status.HTTP_200_OK)

@@ -57,7 +57,8 @@ REST_FRAMEWORK = {
     "NON_FIELD_ERRORS_KEY": "errors",  # dictionary key for non field error when bad request response is returned
     'DEFAULT_AUTHENTICATION_CLASSES': (
             'rest_framework_simplejwt.authentication.JWTAuthentication',
-        )
+        ),
+    'EXCEPTION_HANDLER': 'tennis_api.utils.custom_exception_handler'
 }
 
 # https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
@@ -127,6 +128,8 @@ else:
     DATABASES = {}
     DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
     DATABASES['default'] = dj_database_url.config(default=config("DATABASE_URL"))
+
+DEBUG = False
 
 
 # Password validation
